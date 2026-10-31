@@ -13,7 +13,9 @@ void main() {
 }
 
 class EmotionApp extends StatelessWidget {
-  const EmotionApp({super.key});
+  const EmotionApp({super.key, this.controller});
+
+  final PipelineController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -26,20 +28,22 @@ class EmotionApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(controller: controller),
     );
   }
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.controller});
+
+  final PipelineController? controller;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _controller = PipelineController();
+  late final _controller = widget.controller ?? PipelineController();
   var _tab = 0;
 
   @override

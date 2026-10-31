@@ -4,6 +4,11 @@ import '../ml/emotion_pipeline.dart';
 
 /// Owns the loaded [EmotionPipeline] and reloads it when the config changes.
 class PipelineController extends ChangeNotifier {
+  PipelineController({this.loader = EmotionPipeline.load});
+
+  /// Injectable so widget tests can run without native ONNX Runtime.
+  final Future<EmotionPipeline> Function(PipelineConfig) loader;
+
   PipelineConfig _config = const PipelineConfig();
   EmotionPipeline? _pipeline;
   Object? _error;
@@ -24,7 +29,7 @@ class PipelineController extends ChangeNotifier {
     await previous?.close();
 
     try {
-      final pipeline = await EmotionPipeline.load(_config);
+      final pipeline = await loader(_config);
       if (generation != _generation) {
         await pipeline.close();
         return;
