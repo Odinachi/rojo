@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'ml/emotion_pipeline.dart';
+import 'ui/camera_screen.dart';
 import 'ui/photo_screen.dart';
 import 'ui/pipeline_controller.dart';
 
@@ -39,6 +40,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _controller = PipelineController();
+  var _tab = 0;
 
   @override
   void initState() {
@@ -70,6 +72,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           body: _body(),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _tab,
+            onDestinationSelected: (i) => setState(() => _tab = i),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.videocam),
+                label: 'Live camera',
+              ),
+              NavigationDestination(icon: Icon(Icons.photo), label: 'Photo'),
+            ],
+          ),
         );
       },
     );
@@ -84,7 +97,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    return PhotoScreen(controller: _controller);
+    // Not an IndexedStack: leaving the camera tab should release the camera.
+    return switch (_tab) {
+      0 => CameraScreen(controller: _controller),
+      _ => PhotoScreen(controller: _controller),
+    };
   }
 }
 
