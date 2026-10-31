@@ -56,15 +56,24 @@ class _PhotoScreenState extends State<PhotoScreen> {
 
   Future<void> _setImage(Uint8List bytes) async {
     setState(() => _busy = true);
-    // Decode, apply EXIF rotation and downscale off the UI thread. We display
-    // the re-encoded image so the overlay matches exactly what the model saw.
-    final (image, display) = await Isolate.run(() {
+    // Display the re-encoded image so the overlay matches what the model saw.
+    final (image, display) = await _decode(bytes);
+    _image = image;
+    _displayBytes = display;
+    _result = null;
+    await _run();
+  }
+
+  /// Decode, apply EXIF rotation and downscale off the UI thread. Static so
+  /// the isolate closure doesn't capture this State.
+  static Future<(img.Image, Uint8List)> _decode(Uint8List bytes) {
+    return Isolate.run(() {
       var image = img.bakeOrientation(img.decodeImage(bytes)!);
       final longest = math.max(image.width, image.height);
       if (longest > _maxSide) {
         final scale = _maxSide / longest;
         image = img.copyResize(
-          image.convert(numChannels: 3),
+          image,
           width: (image.width * scale).round(),
           height: (image.height * scale).round(),
         );
@@ -72,10 +81,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
       image = image.convert(numChannels: 3);
       return (image, img.encodeJpg(image, quality: 90));
     });
-    _image = image;
-    _displayBytes = display;
-    _result = null;
-    await _run();
   }
 
   void _rerun() {

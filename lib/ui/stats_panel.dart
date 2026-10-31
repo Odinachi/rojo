@@ -28,6 +28,7 @@ class StatsPanel extends StatelessWidget {
         : result.faces.reduce((a, b) => a.face.score >= b.face.score ? a : b);
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       color: theme.colorScheme.surfaceContainer,
       child: Column(

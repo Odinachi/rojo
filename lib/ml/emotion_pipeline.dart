@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:image/image.dart' as img;
@@ -105,9 +106,7 @@ class EmotionPipeline {
     final stopwatch = Stopwatch()..start();
 
     // Pixel loops are slow on the UI thread, so preprocessing runs in an isolate.
-    final detectorInput = await Isolate.run(
-      () => FaceDetector.preprocess(image),
-    );
+    final detectorInput = await _preprocessDetector(image);
     var preprocess = stopwatch.elapsed;
 
     stopwatch.reset();
@@ -117,12 +116,7 @@ class EmotionPipeline {
     stopwatch.reset();
     final crops = faces.isEmpty
         ? const []
-        : await Isolate.run(
-            () => [
-              for (final face in faces)
-                EmotionClassifier.preprocess(image, face.box),
-            ],
-          );
+        : await _preprocessFaces(image, faces);
     preprocess += stopwatch.elapsed;
 
     stopwatch.reset();
@@ -139,6 +133,20 @@ class EmotionPipeline {
       classify: classify,
     );
   }
+
+  // Closures created in instance methods capture `this`, which may not be
+  // sendable to another isolate. Static helpers capture only their arguments.
+  static Future<Float32List> _preprocessDetector(img.Image image) =>
+      Isolate.run(() => FaceDetector.preprocess(image));
+
+  static Future<List<Float32List>> _preprocessFaces(
+    img.Image image,
+    List<Face> faces,
+  ) => Isolate.run(
+    () => [
+      for (final face in faces) EmotionClassifier.preprocess(image, face.box),
+    ],
+  );
 
   Future<void> close() async {
     await _detector.close();

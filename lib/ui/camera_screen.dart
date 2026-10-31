@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 
 import '../camera/frame_converter.dart';
 import '../ml/emotion_pipeline.dart';
@@ -139,7 +140,7 @@ class _CameraScreenState extends State<CameraScreen>
             Platform.isAndroid &&
             description.lensDirection == CameraLensDirection.front,
       );
-      final upright = await Isolate.run(() => convertFrame(frame));
+      final upright = await _convert(frame);
       final result = await pipeline.run(upright);
 
       final now = DateTime.now();
@@ -159,6 +160,10 @@ class _CameraScreenState extends State<CameraScreen>
       _busy = false;
     }
   }
+
+  // Static so the isolate closure doesn't capture this State.
+  static Future<img.Image> _convert(RawFrame frame) =>
+      Isolate.run(() => convertFrame(frame));
 
   @override
   Widget build(BuildContext context) {
