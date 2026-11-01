@@ -1,4 +1,4 @@
-package dev.odinachi.onnx_emotion_demo
+package com.odibillz.rojo
 
 import io.flutter.embedding.android.FlutterActivity
 
